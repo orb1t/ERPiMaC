@@ -1,6 +1,6 @@
 <%-- 
-    Document   : UpdateInventory
-    Created on : Oct 25, 2016, 11:17:21 PM
+    Document   : UpdatePrices
+    Created on : Nov 17, 2016, 1:03:22 AM
     Author     : Harsh
 --%>
 
@@ -17,13 +17,13 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <link rel="stylesheet" href="erpimac.css" />
-        <title>ERPiMaC - Update Inventory</title>
+        <title>ERPiMaC - Update Prices</title>
         <jsp:include page="WEB-INF/jspf/Header.jspf"/>
         <script>
             function onbodyload() {
                 if (<%=request.getParameter("update") != null%>) {
                     inv_id.value = "<%=request.getParameter("inv_id")%>";
-                    inv_quantity.value = "<%=request.getParameter("inv_quantity")%>";
+                    inv_quantity.value = "<%=request.getParameter("inv_price")%>";
                 }
             }
         </script>
@@ -31,7 +31,7 @@
     <%--366FB4--%>
     <body style="font-family: Renogare;" onload="onbodyload()">
         <div style="text-align: center; padding-left: 64px; padding-right: 64px; padding-top: 16px; padding-bottom: 16px; color: black">
-            <h3>Please enter the item INV Code and the quantity to update</h3>
+            <h3>Please enter the item INV Code and the new price to update</h3>
             <form method="post">
                 <table style="float: none; margin: auto;">
                     <tr>
@@ -39,13 +39,13 @@
                         <td><input type="text" id="inv_id" class="roundedBounds" name="inv_id" placeholder="XX####" /></td>
                     </tr>
                     <tr>
-                        <td class="labelcell">INV Quantity</td><td />
-                        <td><input type="text" id="inv_quantity" class="roundedBounds" name="inv_quantity" placeholder="#" /></td>
+                        <td class="labelcell">INV Price</td><td />
+                        <td><input type="text" id="inv_price" class="roundedBounds" name="inv_price" placeholder="#" /></td>
                     </tr>
                     <tr style="height: 16px;"></tr>
                     <tr>
                         <td colspan="3">
-                            <button type="submit" name="update" class="flatbutton">Update Inventory</button>
+                            <button type="submit" name="update" class="flatbutton">Update Price</button>
                         </td>
                     </tr>
                     <tr>
@@ -70,33 +70,30 @@
                     } else if (!code.matches("[A-Z]{2,}[0-9]{4,}")) {
                         noerror = chainAttribute(noerror, request, "codeError", "Invalid code specified: '" + code + "'");
                     }
-                    int quantity = 0;
+                    double ppu = 0;
                     try {
-                        if (request.getParameter("inv_quantity") == null) {
-                            noerror = chainAttribute(noerror, request, "quantityError", "No quantity specified.");
+                        if (request.getParameter("inv_price") == null) {
+                            noerror = chainAttribute(noerror, request, "priceError", "No price specified.");
                         } else {
-                            quantity = Integer.parseInt(request.getParameter("inv_quantity"));
-                            if (quantity <= 0) {
-                                noerror = chainAttribute(noerror, request, "quantityError", "Quantity cannot be zero or negative.");
-                            }
+                            ppu = Double.parseDouble(request.getParameter("inv_price"));
                         }
                     } catch (NumberFormatException e) {
-                        noerror = chainAttribute(noerror, request, "quantityError", "Invalid quantity specified: '" + quantity + "' or NaN");
+                        noerror = chainAttribute(noerror, request, "priceError", "Invalid price specified: '" + ppu + "' or NaN");
                     }
                     if (noerror) {
                         DriverManager.registerDriver(new org.apache.derby.jdbc.ClientDriver());
                         try (Connection con = DriverManager.getConnection("jdbc:derby://localhost:1527/erpimac", "erpimac", "erpimac")) {
                             con.setAutoCommit(false);
                             Savepoint s = con.setSavepoint();
-                            try (PreparedStatement ins = con.prepareStatement("update INVENTORY set quantity = quantity + ? where code = ?")) {
-                                ins.setInt(1, quantity);
+                            try (PreparedStatement ins = con.prepareStatement("update INVENTORY set price = ? where code = ?")) {
+                                ins.setDouble(1, ppu);
                                 ins.setString(2, code);
                                 ins.executeUpdate();
-                                try (PreparedStatement get = con.prepareStatement("select price from INVENTORY where code = ?")) {
+                                /*try (PreparedStatement get = con.prepareStatement("select quantity from INVENTORY where code = ?")) {
                                     get.setString(1, code);
                                     ResultSet set = get.executeQuery();
-                                    if (set.next()) {
-                                        double ppu = set.getDouble(1);
+                                    if (set.next()) {*/
+                                        int quantity = 0;//set.getInt(1);
                                         try (PreparedStatement log = con.prepareStatement("insert into INVLOG values(?,?,?,?,?)")) {
                                             log.setString(1, code);
                                             log.setString(2, "upd");
@@ -107,10 +104,10 @@
                                         } catch (SQLException ex) {
                                             throw ex;
                                         }
-                                    }
+                                    /*}
                                 } catch (SQLException ex) {
                                     throw ex;
-                                }
+                                }*/
                             } catch (SQLException ex) {
                                 con.rollback(s);
                                 throw ex;
@@ -139,7 +136,7 @@
             <c:if test="${not empty quantityError}">
                 <script>
                     (function() {
-                        var error = "<%=request.getAttribute("quantityError")%>";
+                        var error = "<%=request.getAttribute("priceError")%>";
                         if (error !== 'null')
                             log.innerText = (log.innerText + "\n" + error).trim();
                     })();

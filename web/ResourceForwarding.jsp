@@ -1,9 +1,15 @@
 <%-- 
-    Document   : AddInventory
+    Document   : ResourceForwarding
     Created on : Oct 25, 2016, 11:17:21 PM
     Author     : Harsh
 --%>
 
+<%@page import="java.sql.ResultSet"%>
+<%@page import="java.sql.Savepoint"%>
+<%@page import="java.sql.SQLException"%>
+<%@page import="java.sql.PreparedStatement"%>
+<%@page import="java.sql.DriverManager"%>
+<%@page import="java.sql.Connection"%>
 <%@page import="java.util.Enumeration"%>
 <%@page import="java.util.Collections"%>
 <%@page import="java.util.LinkedList"%>
@@ -68,8 +74,8 @@
     <head>
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <link rel="stylesheet" href="erpimac.css" />
-        <title>Forward Resource</title>
-        <jsp:include page="Header.jspf"/>
+        <title>ERPiMaC - Forward Resource</title>
+        <jsp:include page="WEB-INF/jspf/Header.jspf"/>
         <script>
             function onbodyload() {
                 if (<%=request.getParameter("forward") != null%>) {
@@ -86,15 +92,15 @@
             <form id="add_form" method="post">
                 <span class="labelcell">INV Code</span>
                 <input type="text" id="inv_id" class="roundedBounds" name="inv_id" placeholder="XX####" />
-                <input type="submit" class="flatbutton" value="Add" name="add" />
-                <input type="submit" class="flatbutton" value="Clear" name="clear" />
+                <input type="submit" class="flatbutton roundedBoundsNoFocus" value="Add" name="add" />
+                <input type="submit" class="flatbutton roundedBoundsNoFocus" value="Clear" name="clear" />
             </form>
             <form method="post">
                 <table style="float: none; margin: auto; width: 128px;">
                     <c:forEach var="current" items="${codes}">
                         <tr>
                             <td class="labelcell"><c:out value="${current}" /><span style="font-size: 16px">&nbsp;×</span></td>
-                            <td><input type="text" name="${current}" class="roundedBounds" style="width: 64px;" name="inv_quantity" placeholder="#" /></td>
+                            <td><input type="text" name="${current}" class="roundedBounds" style="width: 64px;" placeholder="#" /></td>
                             <td><input type="submit" class="flatbutton" name="${current}clear" value="×"/></td>
                         </tr>
                     </c:forEach>
@@ -116,6 +122,59 @@
             <%
                 if (request.getParameter("forward") != null) {
                     //To-do forwarding module here
+                    String error = "";
+                    DriverManager.registerDriver(new org.apache.derby.jdbc.ClientDriver());
+                    try (Connection con = DriverManager.getConnection("jdbc:derby://localhost:1527/erpimac", "erpimac", "erpimac")) {
+                        ArrayList params = getCodeParameters(request);
+                        for (Object p : params) {
+                            String key = (String) p;
+                            con.setAutoCommit(false);
+                            Savepoint here = con.setSavepoint();
+                            try (PreparedStatement upd = con.prepareStatement("update INVENTORY set quantity = quantity - ? where code = ?")) {
+                                int quantity = Integer.parseInt(request.getParameter(key));
+                                if (quantity > 0) {
+                                    upd.setInt(1, quantity);
+                                    upd.setString(2, key);
+                                    upd.executeUpdate();
+                                    try (PreparedStatement get = con.prepareStatement("select price from INVENTORY where code = ?")) {
+                                        get.setString(1, key);
+                                        ResultSet set = get.executeQuery();
+                                        if (set.next()) {
+                                            double ppu = set.getDouble(1);
+                                            try (PreparedStatement log = con.prepareStatement("insert into INVLOG values(?,?,?,?,?)")) {
+                                                log.setString(1, key);
+                                                log.setString(2, "fwd");
+                                                log.setTimestamp(3, java.sql.Timestamp.from(java.time.Instant.now()));
+                                                log.setInt(4, -quantity);
+                                                log.setDouble(5, ppu);
+                                                log.executeUpdate();
+                                                request.setAttribute("done", true);
+                                            } catch (SQLException ex) {
+                                                throw ex;
+                                            }
+                                        }
+                                    } catch (SQLException ex) {
+                                        throw ex;
+                                    }
+                                } else {
+                                    error += "Quantity cannot be null or negative, " + key + ".\n";
+                                }
+                            } catch (SQLException ex) {
+                                con.rollback(here);
+                                throw ex;
+                            } finally {
+                                con.releaseSavepoint(here);
+                                con.setAutoCommit(true);
+                            }
+                        }
+                    } catch (SQLException ex) {
+                        String s = ex.toString();
+                        if (s.contains("java.sql.SQLIntegrityConstraintViolationException")) {
+                            s = "INV Item already exists";
+                        }
+                        request.setAttribute("sqlError", s);
+                    }
+                    request.setAttribute("error", error);
                 }
             %>
             <c:if test="${not empty codeError}">
@@ -142,6 +201,33 @@
                         var error = "<%=request.getAttribute("addError")%>";
                         if (error !== 'null')
                             log.innerText = (log.innerText + "\n" + error).trim();
+                    })();
+                </script>
+            </c:if>
+            <c:if test="${not empty sqlError}">
+                <script>
+                    (function() {
+                        var error = "<%=request.getAttribute("sqlError")%>";
+                        if (error !== 'null')
+                            log.innerText = (log.innerText + "\n" + error).trim();
+                    })();
+                </script>
+            </c:if>
+            <c:if test="${not empty error}">
+                <script>
+                    (function() {
+                        var error = "<%=request.getAttribute("error")%>";
+                        if (error !== 'null')
+                            log.innerText = (log.innerText + "\n" + error).trim();
+                    })();
+                </script>
+            </c:if>
+            <c:if test="${not empty done}">
+                <script>
+                    (function() {
+                        var error = "<%=request.getAttribute("done")%>";
+                        if (error !== 'null')
+                            log.innerText = error.trim();
                     })();
                 </script>
             </c:if>

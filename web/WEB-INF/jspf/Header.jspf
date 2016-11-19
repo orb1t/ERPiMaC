@@ -1,0 +1,47 @@
+<link rel='shortcut icon' href='favicon.ico' type='image/x-icon' />
+<div id='header_div' class="animateheight" style="background-color: #366fb4; padding-left: 32px; padding-top: 8px; padding-bottom: 16px;">
+    <div style="display: inline-block;">
+        <div id='img_div' style="float: left; text-align: center; margin-top: 16px;">
+            <a href="index.jsp"><img id='logo' src='ERP iMac-logo.png' width="96"/></a>
+        </div>
+        <div id='head_div' style="display: inline-block; padding-left: 32px; padding-top: 8px;">
+            <h1 id='title' style="margin-bottom: 0px;">ERP-IMaC</h1>
+            <h5 id='caption' style="display: inline;">ERP Inventory Management and Control</h5>
+        </div>
+    </div><br/>
+    <div style="margin-top: -32px; float: right; margin-right: 16px;">
+        <button class="toolbutton" onclick="location.href = '/ERPIMAC/AddInventory.jsp'">Add</button>
+        <button class="toolbutton" onclick="location.href = '/ERPIMAC/UpdateInventory.jsp'">Update (Q)</button>
+        <button class="toolbutton" onclick="location.href = '/ERPIMAC/UpdatePrices.jsp'">Update (P)</button>
+        <button class="toolbutton" onclick="location.href = '/ERPIMAC/Billing.jsp'">Billing</button>
+        <button class="toolbutton" onclick="location.href = '/ERPIMAC/ResourceForwarding.jsp'">Forward</button>
+        <button class="toolbutton" onclick="location.href = '/ERPIMAC/Reporting.jsp'">Reporting</button>
+    </div>
+</div>
+<script>
+    function collapseHeader() {
+        logo.width = 0;
+        head_div.removeChild(title);
+        try {
+            img_div.removeChild(logo);
+        } catch (e) {
+        }
+        head_div.appendChild(caption);
+        caption.innerText = 'ERPiMac (' + caption.innerText + ')';
+        header_div.style.paddingTop = '11px';
+    }
+    function restoreHeader() {
+        logo.width = 32;
+        img_div.appendChild(logo);
+        if (document.getElementById('title') == undefined) {
+            var title = document.createElement('h1');
+            title.style.marginBottom = '0px';
+            title.innerHTML = "ERP-IMaC";
+            title.id = 'title';
+        }
+        head_div.appendChild(title);
+        head_div.appendChild(caption);
+        caption.innerText = 'ERP Inventory Management and Control';
+        header_div.style.paddingTop = '8px';
+    }
+</script>

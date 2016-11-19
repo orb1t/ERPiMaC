@@ -11,7 +11,7 @@
         <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
         <link rel="stylesheet" href="erpimac.css" />
         <title>Home - ERPiMac</title>
-        <jsp:include page="Header.jspf" />
+        <jsp:include page="WEB-INF/jspf/Header.jspf" />
     </head>
     <body>
         <div style="color: black; text-align: center;">

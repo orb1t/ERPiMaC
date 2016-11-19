@@ -16,6 +16,13 @@ div {
     transition: background 1.6s ease-out;
 }
 
+.animateheight {
+    -webkit-transition: height 5s ease-out;
+    -moz-transition: height 5s ease-out;
+    -o-transition: height 5s ease-out;
+    transition: height 5s ease-out;
+}
+
 .paragraph {
     font-family: Candara;
     font-weight: lighter;
@@ -91,8 +98,44 @@ h1 {
 }
 
 .flatbutton {
-    background: black;
+    background: white;
     border: 0px;
+    border-bottom: 1px solid #366fb4;
+    outline: none;
+    color: rgba(0, 0, 0, 0.90);
+    height: 32px;
+    margin-top: 0px;
+    margin-bottom: 0px;
+    margin-left: 2px;
+    margin-right: 0px;
+    padding-left: 16px;
+    padding-right: 16px;
+    padding-top: 0px;
+    padding-bottom: 7px;
+    font-family: Renogare;
+    font-weight: normal;
+    font-size: 11px;
+
+    -webkit-font-smoothing: antialiased;
+
+    -webkit-transition: border-bottom-width .1s ease-out, padding-bottom .1s ease-out;
+    -moz-transition: border-bottom-width .1s ease-out, padding-bottom .1s ease-out;
+    -o-transition: border-bottom-width .1s ease-out, padding-bottom .1s ease-out;
+    transition: border-bottom-width .1s ease-out, padding-bottom .1s ease-out;
+}
+.flatbutton:hover {
+    border-bottom: 8px solid #366fb4;
+    padding-bottom: 0px;
+    color: #000000;
+}
+.flatbutton:active {
+    background: #366fb4;
+    color: white;
+}
+
+.toolbutton {
+    background: #366fb4;
+    border: 1px;
     border-radius: 16px;
     outline: none;
     color: rgba(255, 255, 255, 0.90);
@@ -116,14 +159,13 @@ h1 {
     -o-transition: background .1s ease-out, font-size .1s ease-out;
     transition: background .1s ease-out, font-size .1s ease-out;
 }
-.flatbutton:hover {
+.toolbutton:hover {
+    border: #ffffff 1px solid;
+}
+.toolbutton:active {
     background: #ffffff;
     color: #000000;
-    border: #366fb4 1px solid;
-}
-.flatbutton:active {
-    background: #366fb4;
-    color: white;
+    border: #ffffff 1px solid;
 }
 .flatbuttonselected {
     background: rgba(0, 0, 0, 0.75);
@@ -213,4 +255,21 @@ h1 {
     background-color: transparent;
     color: #366fb4;
     outline: none;
+}
+
+::-webkit-scrollbar
+{
+  width: 4px;
+  height: 4px;
+  background: rgba(0, 0, 0, 0);
+}
+
+::-webkit-scrollbar-track
+{
+  background: rgba(0, 0, 0, 0);
+}
+
+::-webkit-scrollbar-thumb
+{
+  background: rgba(0, 0, 0, 0.8);
 }
